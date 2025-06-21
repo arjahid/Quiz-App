@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 export default function ScoreHistory() {
   const [results, setResults] = useState([]);
 
-  useEffect(() => {
+  // Fetch all results from backend
+  const fetchResults = () => {
     fetch("http://localhost:3000/api/results")
       .then((res) => res.json())
       .then((data) => {
@@ -11,7 +12,25 @@ export default function ScoreHistory() {
         setResults(data);
       })
       .catch((err) => console.error("Error fetching results:", err));
+  };
+
+  useEffect(() => {
+    fetchResults();
   }, []);
+
+  // Delete handler
+  const handleDelete = (id) => {
+    if (!window.confirm("Are you sure you want to delete this result?")) return;
+
+    fetch(`http://localhost:3000/api/results/${id}`, {
+      method: "DELETE",
+    })
+      .then((res) => res.json())
+      .then(() => {
+        setResults((prev) => prev.filter((r) => r._id !== id));
+      })
+      .catch((err) => console.error("Error deleting result:", err));
+  };
 
   return (
     <div className="max-w-3xl mx-auto bg-white p-6 rounded shadow mt-3 mb-12">
@@ -28,6 +47,7 @@ export default function ScoreHistory() {
               <th className="border px-4 py-2 font-semibold">Score</th>
               <th className="border px-4 py-2 font-semibold">Total</th>
               <th className="border px-4 py-2 font-semibold">Date</th>
+              <th className="border px-4 py-2 font-semibold">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -38,6 +58,15 @@ export default function ScoreHistory() {
                 <td className="border px-4 py-2 text-green-700 font-bold">{result.score}</td>
                 <td className="border px-4 py-2 text-gray-700">{result.total}</td>
                 <td className="border px-4 py-2 text-gray-600">{new Date(result.date).toLocaleString()}</td>
+                <td className="border px-4 py-2 text-center">
+                  <button
+                    onClick={() => handleDelete(result._id)}
+                    className="text-red-600 hover:text-red-800 font-semibold"
+                    title="Delete this result"
+                  >
+                    🗑️ Delete
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
